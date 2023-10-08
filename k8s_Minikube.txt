@@ -1,1 +1,21 @@
 
+
+
+kubectl cluster-info
+
+Services Type:
+	ClusterIP
+  NodePort
+  LoadBalancer
+ Ingress
+
+Applying Yaml File
+ kubectl apply -f <filename.yaml>
+ kubectl delete <object_name> <filename.yaml>
+ kubectl get pods
+ kubectl get services
+
+
+==========For Minikube========== 
+   minikube ip -> for getting IP.
+   minikube ssh -> for entering inside the the Virtual Env

@@ -1,0 +1,33 @@
+Installaition process of Docker on Rhel/Centos
+--> POST https://docs.docker.com/engine/install/centos/
+====> Installaition of Docker with RPM Package 
+    https://download.docker.com/linux/centos/9/x86_64/
+    list for full docker installation -> 
+		docker-ce  https://download.docker.com/linux/centos/9/x86_64/stable/Packages/docker-ce-24.0.6-1.el9.x86_64.rpm
+		docker-ce-cli  https://download.docker.com/linux/centos/9/x86_64/stable/Packages/docker-ce-cli-24.0.6-1.el9.x86_64.rpm
+		containerd.io   https://download.docker.com/linux/centos/9/x86_64/stable/Packages/containerd.io-1.6.9-3.1.el9.x86_64.rpm
+		docker-buildx-plugin https://download.docker.com/linux/centos/9/x86_64/stable/Packages/docker-buildx-plugin-0.11.2-1.el9.x86_64.rpm
+		docker-compose-plugin https://download.docker.com/linux/centos/9/x86_64/stable/Packages/docker-compose-plugin-2.6.0-3.el9.x86_64.rpm
+		rootless extras https://download.docker.com/linux/centos/9/x86_64/stable/Packages/docker-ce-rootless-extras-20.10.16-3.el9.x86_64.rpm
+		
+		Note : first install docker-ce-cli 
+               then install	containerd-io
+			   then install docker-ce and rootless-extras-20 both same time	   
+	
+	
+	systemctl start docker
+	systemctl status docker
+	systemclt stop docker
+	
+	docker ps -a  --> for all running container 
+	docker build -t <image_name>  .  --> creating image  , run command where "Dockerfile" is present
+	
+	docker run --name "optional_running_name" -p 9080:9080  -d <image_name>  --> -d is optional for running in background, first port of system ,second of container
+	
+	docker rmi <image_name> --> deleting the image
+	
+	docker container prune --> deleting non running old container
+	
+	
+	
+	

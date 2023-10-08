@@ -1,21 +1,97 @@
+=====> BASIC INFO <======
+kubernetes is the system for creating the cluster of differnet node (server) where containrized(eg. Docker image) can be deployed. It helps in intereaction of different container to each other very efficiently.
+
+Note: It doesnt build any image or container, its only deploy build images (eg .from docker or any other like docker).
+
+Pods: In k8s system, each image get deployed in small unit that call as "pods" in k8s system. Eg. Suppose there is a nodejs app image created from DOCKER, if we deploy in k8s , the we call , we have one nodejs pod [we can create replica like 5 pods of same nodejs app image]
 
 
+K8s Cluster System : 
+Main server call as Master Node  and call as worker node. [In the worker node, several pods can be deployed that managed by master node, Suppose we have given master node to create replica of 5 nodejsapp image and  if one of it get down, master node recreate the new pod]
 
-kubectl cluster-info
+	
+=====>INSTALLATION PROCESS <===== 
 
-Services Type:
-	ClusterIP
-  NodePort
-  LoadBalancer
- Ingress
+"Kubectl" is the main command that installed in MASTER NODE and "kubelet" is the command that installed in WORKER Node.
 
-Applying Yaml File
- kubectl apply -f <filename.yaml>
- kubectl delete <object_name> <filename.yaml>
- kubectl get pods
- kubectl get services
+In Production Env, Every cloud services providing the pre configured K8s Cluster System, hence no manual installation or configuration required as it tedious and long process to create master and serveral worker nodes and combine them to create k8s system.
+
+In Local system, we can test by installing manually. [Note- we require two or more system for testing worker and master node , hence we can install "minikube" which create a virtual env for worker node and also include configure all those packages which require in worker node automatically, hence we will install only "Kubectl" in our system.
+
+---->Kubectl installaiton  --> https://kubernetes.io/docs/tasks/tools/install-kubectl-linux/
+
+		1) curl -LO "https://dl.k8s.io/release/$(curl -L -s https://dl.k8s.io/release/stable.txt)/bin/linux/amd64/kubectl"
+		
+			OR by specific version --> curl -LO https://dl.k8s.io/release/v1.28.2/bin/linux/amd64/kubectl
+
+		2) sudo install -o root -g root -m 0755 kubectl /usr/local/bin/kubectl
+
+---->Minikube Installaition  https://minikube.sigs.k8s.io/docs/start/
+		1) curl -LO https://storage.googleapis.com/minikube/releases/latest/minikube-linux-amd64
+		2) sudo install minikube-linux-amd64 /usr/local/bin/minikube   
+		3) usermod -aG docker $USER && newgrp docker  [Note - Run command other than root user, and restart the system , also docker must be installed prior to it]
+	
+	---->Command for Minikube<-----
+	Then start the minikube --> minikube start
+	Entering to minikube VM --> minikube ssh
+	Stopping the minikube   --> minikube stop
+	Getting the minikube IP --> minikube ip
+	Increasing the size of VM--> minikube config --disk-size=inMB [Mostly not required] 
+			
+======>IMPORTANT COMMAND<=====
+		
+	CHECK THE CLUSTER INFOR -- > kubectl cluster-info
+
+	kubectl get pods   [For more details --> kubectl get pods -o wide
+	kubectl get deployments
+	kubectl get endpoints
+	kubectl get services
+		Services Type:
+			ClusterIP
+			NodePort
+			LoadBalancer
+			Ingress
+
+	kubectl apply -f <filename.yaml>
+	kubectl delete <object_name> <filename.yaml>
+
+===>Applying Yaml File 
 
 
-==========For Minikube========== 
-   minikube ip -> for getting IP.
-   minikube ssh -> for entering inside the the Virtual Env
+--->Example for Deployment Object t
+
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+ name: node-appv1
+spec:
+ replicas: 1
+ selector:
+  matchLabels:
+   app: nodev1
+ template:
+  metadata:
+   labels:
+    app: nodev1
+  spec:
+   containers:
+    - name: node-imagev1
+      image: tanmaybhadani/nodeapp
+      ports:
+       - containerPort: 9081
+
+---> Example for Service Object type : ClusterIP
+apiVersion: v1
+kind: Services
+metadata:
+ name: node-appv1-service
+spec:
+ selector:
+  app: nodev1
+ ports: 
+  - protocol: TCP
+    port: 9081
+    targetPort: 9081
+ type: ClusterIP
+
+

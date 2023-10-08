@@ -3,7 +3,7 @@ kubernetes is the system for creating the cluster of differnet node (server) whe
 
 Note: It doesnt build any image or container, its only deploy build images (eg .from docker or any other like docker).
 
-Pods: In k8s system, each image get deployed in small unit that call as "pods" in k8s system. Eg. Suppose there is a nodejs app image created from DOCKER, if we deploy in k8s , the we call , we have one nodejs pod [we can create replica like 5 pods of same nodejs app image]
+Pods: In k8s system, each image get deployed in small unit that call as "pods". Eg. Suppose there is a nodejs app image created from DOCKER, if we deploy in k8s , the we call , we have one nodejs pod [we can create replica like 5 pods of same nodejs app image]
 
 
 K8s Cluster System : 

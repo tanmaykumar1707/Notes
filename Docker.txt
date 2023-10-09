@@ -28,6 +28,8 @@ Installaition process of Docker on Rhel/Centos
 	
 	docker container prune --> deleting non running old container
 	
-	
+	docker rm <continer_id> - to delete specific non running container
+
+	docker exec -it <c_id> /bin/bash -> to entere inside a running container
 	
 	

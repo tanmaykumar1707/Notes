@@ -1,2 +1,15 @@
 firewall-cmd --zone=public --add-port==22/tcp --permanent
 firewall-cmd --reload
+
+
+
+Process Related
+
+for checking any process
+	ps - ef | grep process_name
+   eg. ps -ef | grep java 
+
+for checking process with port
+   netstat -lntp
+   netstar -lntp | grep 9080
+

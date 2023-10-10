@@ -13,3 +13,10 @@ for checking process with port
    netstat -lntp
    netstar -lntp | grep 9080
 
+
+
+
+
+FOR WINDOWS
+
+WINGET UPFATE --ALL

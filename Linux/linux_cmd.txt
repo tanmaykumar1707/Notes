@@ -1,0 +1,23 @@
+
+
+--> Multiple Search with grep
+
+grep -e 'text1' -e 'text2'  file.txt
+
+
+--> replacement of existing file , create the existing of the backup and replacement in new file, we can do multiple with -e option
+
+sed -i.bkp  -e 's/text_to_replace/new_text/g'  file_name 
+
+
+--> Syncing of two folder,  "n"  in option for dry run, remove n for actual movement of file  , v for verbose z for mainting the permission
+  rsync -avzn  source/folder/  destination/folder/ 
+  
+  rsync -avzn -e ssh user@ip:/path_source/  /destination/folder/
+  
+  
+--> server to server copy with scp , secure coy
+
+	scp -r /folder/to/move  user@ip:/path/of/destination/folder/
+	
+-->

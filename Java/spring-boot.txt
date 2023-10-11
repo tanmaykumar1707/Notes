@@ -1,0 +1,16 @@
+
+
+Some Important Command related to Spring boot for Linux
+
+--> for running the project. Enter inside the project and run below command
+		./mvnw spring-boot:run
+		
+--> For making jar/war
+		./mvnw clean package
+		
+--> By default jar will be created , for War  change in main java class for servlet , change in pom xml for tomcat provided and packaging war
+
+
+-> while running the project, if manual java path need to provide then
+	export JAVA_HOME='java_directory'
+	note: this will remain in one seesion only

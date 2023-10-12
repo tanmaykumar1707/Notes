@@ -4,6 +4,10 @@ Some Important Command related to Spring boot for Linux
 
 --> for running the project. Enter inside the project and run below command
 		./mvnw spring-boot:run
+
+    for passing any arguments
+
+  ./mvnw spring-boot:run -Dspring-boot.run.jvmArguments="-Dserver.port=8081"
 		
 --> For making jar/war
 		./mvnw clean package

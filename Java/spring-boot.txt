@@ -6,7 +6,7 @@ Some Important Command related to Spring boot for Linux
 		./mvnw spring-boot:run
 		
 --> For making jar/war
-		./mvnw clean package
+		./mvnw clean package  or ./mvnw package
 		
 --> By default jar will be created , for War  change in main java class for servlet , change in pom xml for tomcat provided and packaging war
 
@@ -14,3 +14,131 @@ Some Important Command related to Spring boot for Linux
 -> while running the project, if manual java path need to provide then
 	export JAVA_HOME='java_directory'
 	note: this will remain in one seesion only
+	
+	
+	
+===> Course Notes
+
+--> Adding a Rest Controller
+
+   @RestController
+    Above CLass Name
+	
+		@GeMapping("/")
+			Above method Name	
+				public String sayHello(){
+					return "Hello World"; 
+				}
+				
+--> Light Weight Development with Java POJOs(Plain Old Java Objects)
+--> Dependecy injection to promote loose coupling
+--> Minimize boilerplate Java Code
+
+
+
+--> Core Container of Spring Boot 
+	Beans
+	Core
+	SpEL
+	Conntext
+	
+--> InfraStructure
+	AOP
+	Aspeccts
+	Instrumentation
+	Messaging
+	
+--> Data Access Layer
+	JDBC 
+	ORM    ->
+	Transanction
+	OXM  <--> JMS (Java Messaging Service)
+	
+--> Web Layer
+	servlet
+	WebSocker
+	Web
+	
+--> Test Layer
+	Unit
+	Integration
+	Mock
+
+==> Folder structure
+
+	project_folder
+		pom.xml (Project object Model )
+		src/main/java
+		src/main/resources
+		src/test
+		target
+		Maven Wrapper files -> mvnw.sh or mvnw.cmd  -> for linux and windows
+		(If maven is installed in the system, then wrapper files are not required) - using this wrapper files, blugin code is added in pom xml file
+===> pom.xml
+		1. project Meta data
+		2. depedencies
+		3. plugins
+		
+===> groupid -- > organization reversion name
+     artificatid --> project name
+	 version --->  
+	 combinely called as "GAV" 
+	 SNAPSHOT -> it means active development
+	 
+
+==> application.properties file
+	use for adding custom properties which can also be provided during run time explicitly
+		
+	eg.
+	server.port=8090
+	
+	#custom
+	custom.name=Tanmay
+	
+	
+	--> can fetch in code as below	
+			eg.
+					@Value("${custom.name}")
+					private String CustomName;
+					
+	Note: In jar , do not use src/main/webapps as it only beign used durig "war" packaging
+	
+	
+=====> Actuator
+	Exposes endpointes to monitor and manage the application
+	--> Need to add depedency in the pom.xml file
+	-->actutor/health --> shows the status of up 
+	--> by Default /health is only exposed
+	--> others like  /info  need to add in properties file --> 
+	
+		 management.endpoints.web.exposure.include=health,info
+		 can also exlude
+		 		# management.endpoints.web.exposure.exclude=health,info
+
+		 management.info.env.enabled=true
+		 info.app.name=
+		 info.app.description=
+		 info.app.version=
+		 
+		 
+	-> /aduitevents
+		/beans --> all beans  ,  > need to add security
+		/mappings --> all request mapping
+		/threaddump --> all threads running
+		
+	--> for exposing all endpoints
+		management.endpoints.web.exposure.include=*
+		
+		Note: All enpoints are accesible publicly. We can add spring security depedency that restrict and ask for login (/health and /info will not ask)
+			bydefault user  > "user" password -> print while running
+		
+		
+		for adding manual user id password,
+		, need to addin properties
+			spring.security.user.name=
+			spring.security.user.password=
+	
+	
+====>application.properties
+	--> Injecting custom properties from external
+	-->

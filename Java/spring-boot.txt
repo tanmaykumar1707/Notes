@@ -20,7 +20,10 @@ Some Important Command related to Spring boot for Linux
 	note: this will remain in one seesion only
 	
 ===> To Turn off the Spring Banner , add below prop in application.properties file
-	spring.main.banner-mode=off
+	spring.main.banner-mode=
+	
+	to Reduct the logging level
+	logging.level.root=warn
 	
 ===> Course Notes
 
@@ -513,3 +516,403 @@ Hibernate
 		}
 	
 	}
+	=====>
+	JPA
+	 1) Create a Entity CLass
+		Must be Annotated with @Entity
+		Must hava a public or protected no-argument construtor
+		 The class can have others construtor
+		 
+		@Entity
+		@Table(name="student") --> optional 
+		public class Student { 
+			@Id
+			@Coloumn(name="id")
+			@GeneratedValue(strategy=GenerationType.IDENTITY) --> manage by DB, no need to provide value
+			private int id;
+			
+			@Coloumn(name="first_name")--> optional, if not provided then field will be same
+			private String firstName;
+			
+			//No arg constructor
+			
+			//getter and setter method 
+		
+		}
+		
+		
+		--> Generation Strategies
+			GenerationType.AUTO  - pick an appropiate strategy for the particular database
+			GenerationType.IDENTITY - Assing primary keys usind DB identity col
+			GenerationType.SEQUENCE - Assing primary keys using a db Sequence
+			GenerationType.TABLE - Assing primary keys using a underlying database tabe to ensure uniqueness
+			
+			We can provide custom generation strategy also
+			create implementation of org.hibernate.id.IdentifierGenerator
+			override the method  public Serializable generate(....)
+			
+		Data Access Object (DAO)
+			-> Responsible for interfacing with the database
+			-> This is a common design pattern
+			
+				App<-----> DAO <-----> DB
+				
+		save()
+		findByid()
+		findAll()
+		findByLastName();
+		update();
+		delete();
+		deleteAll();
+		
+		-> DAO needs a JPA EntityManager and EntityManager needs a DataSource 
+		
+		DOA  -> EntityManager -> DatSource-> DB
+		
+		
+		
+	2) Define DAO Interface
+	  Define DAO implementation
+	  Inject the EntityManager
+	  update the main App
+	  
+	  -> @Transanctional -> Auto begin and end a transaction for you JPA code, No need to explicitly , neeed to add before the method in DaoImplt
+	  
+	  --> For Annotating DAO class, need to add @Repository Classes , its sub annotation of @Component
+	  
+			@Component------> @Repository   (Add to the DAO implementation)
+				|
+				|
+				|
+				V
+			@RestController
+	  
+	  -> DAO interface
+	  -----------------------
+	  public interface StudentDAO{
+	  
+		void save(Student theStudent); 
+		
+		Student findById(Integer id);
+		
+		List<Student> findAll();
+		
+		void update(Student student);
+		
+		void delete(Integer id);
+		
+	  }
+	  ------------------------------
+	  ->  DAO Implementation
+	  -----------------------------
+	  @Repository
+	  public class StutdnetDaoImpl implements StudetnDAO{
+		
+		private  EntityManager entityManager;
+		@AutoWired             --> Constructor bases injection
+		public StutdnetDaoImpl(EntityManager entityManager){
+			this.entityManager = entityManager;
+		}
+		
+		
+		@Override
+		@Transanctional
+		public void save(Student student){
+			entityManager.persist(student); --> save the Java Objec to DO
+		}
+	
+		@Override  ---> No need of @Transanctional , as we are doing only query  --> 
+		public void save(Integer id){
+			entityManager.find(Student.class, id); --> save the Java Objec to DO
+		}
+		
+		//Details below for JPQL
+		@Override  ---> No need of @Transanctional , as we are doing only query  --> 
+		public List<Student> findAll(Integer id){
+			TypedQuery<Student> theQuery = entityManager.createQuery("FROM Student",Student.class);  ---> Student is JPA Entity not Table name
+			return theQuery.getResultList();
+			
+		@Override
+		@Transanctional
+		public void update(Student student){
+			entityManager.merge(theStudent);
+		}
+	
+		@Override  
+		@Transanctional
+		public void delete(Integer id){
+			Student theStudent = entityManager.find(Student.class, id); --> save the Java Objec to DO
+			entityManager.remove(theStudent);
+		}
+	
+	  }
+	  ---------------------------------------
+	  For testing, we can test in commandLineRunner like below
+	  @Bean
+		public CommandLIneRunner commandLineRunner(StudnetDAO studentDao){  --> Injection of studentDao
+			return runner -> {
+				createStudnet(studentDao);
+			}
+		}
+		
+		public void createStudnet(StudnetDAO studentDao)
+		{
+			Student tempStudent = new Student("paul" "jaul" , "ss");
+			
+			studentDao.save(tempStudent);
+			
+			System.out.println("Saved and Generated id " + tempStudent.getId());
+		
+		}
+		
+		
+=========>>JPA Query Language (JPQL)
+			-> QUery Language for retrieving objects, similiar with SQL - where like order by join in exclude
+			
+		Eg. Retrieving all students
+		
+		TypedQuery<Student> theQuery = entityManager.createQuery("FROM Student",Student.class);  ---> Student is JPA Entity not Table name
+		List<Student> students = theQuery.getResultList();
+	 
+			Retrieving student based on Lastname 
+		TypedQuery<Student> theQuery = entityManager.createQuery("FROM Student where lastName like 'DOE' ",Student.class);  ---> Student is JPA Entity not Table name and lastName is field name not table coloumn name
+		List<Student> students = theQuery.getResultList();
+		
+		USING with Variable take called as "Named Parameters
+		
+		Eg.  
+		public List<Student> findByLastName(String theLastName){
+			TypedQuery<Student> theQuery = entityManager.createQuery("FROM Student where lastName like :theData ",Student.class);  --->
+			theQuery.setParameter("theData", theLastName);
+			
+			return theQuery.getResultList();
+			
+		}
+		
+		
+=======> Updating an Object through JPA
+		First Find the object to update and then update
+			Student theStudent = entityManager.find(Student.class,1);
+					theStudent.setFirstName("Loo");
+
+		public void update(Student theStudent){	
+			entityManager.merge(theStudent);
+			}
+			
+======> Update multiple rows or all
+		int numRowsUdated = entityManager.createQuery("UPDATE Student SET lastName='Tester'").executeUpdate();
+		
+		
+======>Deleting Object
+		entityManager.remove(theStudent);
+		
+		--> multple based on where condition
+		int numRowsUdated = entityManager.createQuery("DELETE FROM Student where lastName ='SMITH'").executeUpdate();
+		
+		
+		
+=========================
+	Create the Table with Java Code
+		JPA/Hibernate create the SQL and execute in DB and create the Table
+		
+		Need to add below prop in application.properties file
+		spring.jpa.hibernate.ddl-auto=create  
+		
+			options :
+				none --> No Action
+				create-only --> DB tables are only created
+				drop --> db tables are droped
+				create --> DB tables droped and recreate the table
+				create-drop -> DB tables droped and recreate the table and on appliation shutdown ,drop the database tables
+				validate -> validate the tables schema
+				update -> udpate the db tables schema
+		
+		> Log SQL Statments
+		logging.level.org.hibernate.SQL=debug
+		->log sql statement value 
+		logging.level.hibernate.orm.jdbc.bind=trace
+		
+==========================
+
+		
+		
+		
+	REST APIs Services --> Representational State Transfer
+
+
+
+
+==========================
+
+		HTTP Request/Response Messages-->
+			Request/Response Line
+			Header Variables
+			Message Body
+		
+		HTTP Response - Status Codes
+		 100-199 -> Informational
+		 200-299 -> Successfull
+		 300-399 -> Redirection
+		 400-499 -> client error
+		 500-599 -> Server error
+		 
+		 MIME Content Type (Multpurpose Internet Mail-Extension)
+		  The message format is described by MIMI Content Type
+		  Basic Syntax : type/sub-type
+		  
+		  Eg. text/html  ,  text/plain
+			application/json , application/xml
+			
+			jsonplaceholder.typicode.com
+	
+
+ ----> Add Depedency for Spring Boot Starter Web 
+	 
+		@ResController
+		@ReqestMapping("/test")
+		public class RestService{
+		
+		@GetMapping("/hello")
+		public String test(){
+			return "hell to world";
+			}
+			
+		$GetMapping("/student/{studentId}")
+			public Student test(@PathVariable int StudentId){ --> parameter should match to pathVariable
+					//Do some code to fetch and return 
+					return  null;
+			}
+		
+		
+		}
+---> Java JSON Data Binding
+	Data binding is the process of converting JSON data to Java POJO (known as Serialization )
+		Spring uses Jackson project 
+		
+		
+		---> JSON to Java POJO  --> it call setter methods on POJO
+		---> Java POJO to JSON - > it call getter methods on Pojo
+		
+	
+		Spring handles jackson automatically in Rest Services
+
+
+====> Spring Rest Services Excpetion Handling
+		-> Create a Custom error response class
+		-> Create a custom exception class
+		-> Udate Rest Service to throw exception if object not found
+		-> Add an Exception handler method using @ExceptionHandler
+		
+		
+		1) CUSTOM ERROR Class
+		public class StudentErrorResponse{
+		
+			private int status;
+			private String message;
+			private long timeStamp;
+			
+			//Constructor
+			//getters and setters
+		
+		}	
+		
+		2) Create custom student Exception
+		 public class StudentNotFoundExcpetion extends RuntimeExcpetion {
+			public StudentNotFoundExcpetion(String message) {
+			  super(message);
+			}
+		 }
+
+		3) Updating Rest Service to throw Exception
+					
+			$GetMapping("/student/{studentId}")
+			public Student test(@PathVariable int StudentId){ --> parameter should match to pathVariable
+					//Do some code to fetch and return 
+					if ( check student exist or not , if not exist) {
+					{
+							throw new StudentNotFoundExcpeption("Student id not found " + studentID);
+					}
+					return  null;
+			}
+			
+		
+		4)  Inside RestController class , we have to handle the throw expception, provide the proper response
+		
+			@ExcpetionHandler
+			public ResponseEntity<StudentErrorResponse> handleException(StudentNotFoundExcpeption exc) {
+				StudentErrorResponse error  = new StudentErrorResponse() ; --> this is the pojo class createQuery
+				error.setStatus(HttpStatus.NOT_FOUND.value());
+				error.setMessage(exc.getMessage());
+				error.setTimeStamp(System.currentTimeMillis());
+				
+				return new ResponseEntity<>(error,HttpStatus.NOT_FOUND);--> error is body
+			
+			}
+
+			//Catching any Exception if thrown
+			@ExcpetionHandler
+			public ResponseEntity<StudentErrorResponse> handleException(Excpetion exc) {
+				StudentErrorResponse error  = new StudentErrorResponse() ; --> this is the pojo class createQuery
+				error.setStatus(HttpStatus.BAD_REQUEST.value());
+				error.setMessage(exc.getMessage());
+				error.setTimeStamp(System.currentTimeMillis());
+				
+				return new ResponseEntity<>(error,HttpStatus.BAD_REQUEST);--> error is body
+			
+			}
+			
+			
+=====> Global Exception handle for handling exception that code can be reused
+	--> @ControllerAdvice  -> similiar to an intercpetor/ filter
+	--> Pre-Process quests to controllers
+	--> Post-process response to handle exception
+	--> Perfect for global exception handling
+	Real time use of AOP
+	
+	Currenly we have addeded the code for catching exception in same ResController, that can not be used by any other controller
+	
+	
+	Rest Client  -------> ControllerAdvice[Contains ExceptionHandler] <------> Rest Service (if excpetion need to throw, it will send to ControllerAdvice
+	
+	1) Create new @ControllerAdvice
+	2) Add that code of Rescontroller exception handling to controllerAdvice
+
+
+	@ControllerAdvice
+	public class StudentRestExceptionHanlder{
+		
+			@ExcpetionHandler
+			public ResponseEntity<StudentErrorResponse> handleException(StudentNotFoundExcpeption exc) {
+				StudentErrorResponse error  = new StudentErrorResponse() ; --> this is the pojo class createQuery
+				error.setStatus(HttpStatus.NOT_FOUND.value());
+				error.setMessage(exc.getMessage());
+				error.setTimeStamp(System.currentTimeMillis());
+				
+				return new ResponseEntity<>(error,HttpStatus.NOT_FOUND);--> error is body
+			
+			}
+
+			//Catching any Exception if thrown
+			@ExcpetionHandler
+			public ResponseEntity<StudentErrorResponse> handleException(Excpetion exc) {
+				StudentErrorResponse error  = new StudentErrorResponse() ; --> this is the pojo class createQuery
+				error.setStatus(HttpStatus.BAD_REQUEST.value());
+				error.setMessage(exc.getMessage());
+				error.setTimeStamp(System.currentTimeMillis());
+				
+				return new ResponseEntity<>(error,HttpStatus.BAD_REQUEST);--> error is body
+			
+			}
+		
+	}
+
+	
+
+
+
+
+
+
+
+
+

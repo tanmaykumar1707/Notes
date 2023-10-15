@@ -19,7 +19,8 @@ Some Important Command related to Spring boot for Linux
 	export JAVA_HOME='java_directory'
 	note: this will remain in one seesion only
 	
-	
+===> To Turn off the Spring Banner , add below prop in application.properties file
+	spring.main.banner-mode=off
 	
 ===> Course Notes
 
@@ -144,5 +145,371 @@ Some Important Command related to Spring boot for Linux
 	
 	
 ====>application.properties
-	--> Injecting custom properties from external
-	-->
+	--> Injecting custom properties in application properties
+		team.name=Tanmay
+		
+	--> @Value("${team.name}")
+		private String name;
+		
+	-->Categories of application properties
+			core web security Data Actuator Integration DevTools Testing
+	--> Core Properties
+		 Eg. Logging and its level
+		 
+	--> Web
+		server.port=
+		server.servlet.contex-path=/myapp   --> every url start like ip/myapp
+		
+		
+		server.servlet.session.timeout=15m -- > session timeout
+	
+	--> Actuator
+		mains above
+		chane contexxt path of actuator
+		management.endpoints.web.base-path=/actuator
+		
+	-->Security Properties
+		mention above
+		Eg. spring.security.user=
+		
+	-->Data Properties
+		JDBC 
+		 
+	
+===>Inversion of Control
+	-->Spring Conainter 
+		it creates and manage the objects (Inversion of control)
+		Inject Object Depedencies (Depedencies Injection)
+					-->Injection Types: Construction Inject and Setter Injection
+
+	--> Configuring method
+		XML
+		Java Annotations 
+		Java Source Code
+		
+	
+	--Spring AutoWiring->  @Component - Spring Bean and make availaible for Depedencies Injection
+	
+	1) Constructor Injection
+		-----------------
+
+		Create a interface  eg . Coach
+			public interface Coach {
+			
+				String getDailyWorkout();
+			}
+		
+		-------------------
+		Create a implementation of Coach
+		
+			@Combonent -->> Add
+			public Class CricketCoach implements Coach {
+				
+				@Override
+				public String getDailyWorkout(){
+					return "Practice fast bowling";
+				}
+			
+			}
+		
+		 --------------------
+			Create a RestController
+			
+			@RestController
+				publi class DemoRest{
+				
+					private Coach myCoach;
+					
+					@Autowired --> it tells spring to inject a Depedency , if only one Contructor then Autowired is optional
+					public DemoRest(Coach theCoach){
+						myCoach = theCoach;
+					}
+					
+					@GeMapping("dailyworkout")
+					public String getDailyWorkout(){
+						return myCoach.getDailyWorkout();
+					}
+				}
+				
+		-> Here DemoRest Constructor automatically injected by Spring framework
+			it create a object of Coach 
+					Coach theCoach = new CricketCoach();
+			then add this in DemoRest
+						DemoRest demoRest = new DemoRest(theCoach);
+						
+			==> Combonent Scanning  --> 
+			   @SpringBootApplication  -> it enable three annotation 
+			   -> @EnableAutoConfiguration
+				> @ComponetnScan -> First scan same package then other packages, outside of the package will not scan
+						Eg. 
+						 if main java file kept in   "com.app.tanmay" 
+						   then it will scan all packages of current packages and all inside it.
+							but it will not scan  if any bean present in this "com.app.harsh"
+	
+							In this case , we have to explicitly list to scan  in @SpringBootApplication Annotations
+								
+								@SpringBootApplication(
+										scanBasePackages={ "com.app.harsh" } 
+									)
+									
+							
+				-> @Configuration --> Able to register extra beans with @Bean or import other Config classes
+				
+		
+	2) Setter Injection ==>
+			
+			
+			Create a RestController
+			Here instead of creating a construtor we will setCoach method
+			@RestController
+				publi class DemoRest{
+				
+					private Coach myCoach;
+					
+					@Autowired --> it tells spring to inject a Depedency , if only one Contructor then Autowired is optional and here we can give any method name
+					public setCoach(Coach theCoach){
+						myCoach = theCoach;
+					}
+					
+					@GeMapping("dailyworkout")
+					public String getDailyWorkout(){
+						return myCoach.getDailyWorkout();
+					}
+				}
+				
+	 Which to use : 
+			Contructor -> Use when we have reguired depedencies
+			Setter -> use when we have optional depedencies
+			
+		-->
+		 3) Field Injection -> There is third option also , that are not recommeded now.  No Method required, it make harder to unit test.
+			
+			@RestController
+				publi class DemoRest{
+					
+					@Autowired   - > Field Injection
+					private Coach myCoach;
+		
+					@GeMapping("dailyworkout")
+					public String getDailyWorkout(){
+						return myCoach.getDailyWorkout();
+					}
+				}
+				
+
+======> AutoWiring
+			Inject a Coach Implementation
+			Spring will scan @Component , any implements coach interface and then inject that
+			
+			In Case of multiple implements of same interface --> we have to use @Qualifier keyword-
+			  like Coach have multiple like  CricketCoach , TennisCoach  ( Qualifier can access the bean with same name of class only first letter as lowercase)
+			
+				Eg . in Setter Injection,same we can do in Contructor Injection
+				
+				@RestController
+				publi class DemoRest{
+				
+					private Coach myCoach;
+					
+					@Autowired --> it tells spring to inject a Depedency , if only one Contructor then Autowired is optional and here we can give any method name
+					public setCoach(Qualifier("cricketCoach") Coach theCoach){
+						myCoach = theCoach;
+					}
+					
+					@GeMapping("dailyworkout")
+					public String getDailyWorkout(){
+						return myCoach.getDailyWorkout();
+					}
+				}
+				
+				
+=====> @Primary Annotations 
+		Add @Primary in the implemented Class , then no error will come if we have multiple implemented class and not using @Qualifier Annotations
+		
+		By Default , spring will return primary bean.
+		still we can use @Qualifier annotation 
+		
+=====>Lazy Initiliazation
+		By Default, Spring create the object of all classes having component scan. 
+		Instead of creating all beans up front, we can specify Lazy Initiliazation
+		-> Now it will initiliazed 
+			It is needed for depedency injection
+			or It is explicitly requested
+			
+		Need to add @Lazy Annotations  with @Component annotation for each class 
+		
+	or
+	
+		for whole project, need to add in application.properties
+			spring.main.lazy-initializatoin=true
+			
+		Advantages -> fast startup if too many beans
+		Disadvantes -> @RestController will not be created until requested	
+						May not discover config issues
+						
+		
+		Note: For Accessing class name in construtor	
+				getClass().getSimpleName()
+				
+				
+				
+===== > Bean Scopes
+		Default scope -> Singleton  ( Means , single object will be created and same will be refer by all over )
+		
+		Explicitly mention
+		
+		Wiht @Component
+		@Scope(ConfigurableBeanFactory.SCOPE_SINGLETON)
+		
+		others  scopes
+		prototype -> creates a new bean instance for each container request
+		request -> for HTTP web requets, for web app only
+		session -> for HTT Web session
+		global-session -> forglobal HTTP Session
+		
+		
+		
+==> Bean Lifecycle
+
+	-> Container started --> Bean Initiliazed --> Depedencies injected --> Internal spring Processing-> Custom init method (Ready for use
+		container stoped-> custom destroy
+		
+	->We can add custom code during intiliazaiton 
+		calling custom business logic
+		setting up handles to resources (db socket file etc)
+	-> custom code during bean destruction
+		calling custom business logic
+		cleanup up handles to resources (db socket file etc)
+	  
+	  Annotations to be use,used above any method to consider it
+	@PostConstruct 
+	@PreDestroy
+	
+		Create a implementation of Coach
+		
+			@Combonent -->> Add
+			public Class CricketCoach implements Coach {
+				
+				@Override
+				public String getDailyWorkout(){
+					return "Practice fast bowling";
+				}
+				
+				@PostConstruct
+				public void doSomeStartupStuff(){
+					Sysout.println("start up stuuff " + getClass().getSimpleName() );'
+				}
+				
+				@PreDestroy
+				public void doSomeStartupStuff(){
+					Sysout.println("clean up stuuff before destroy" + getClass().getSimpleName() );'
+				}
+			
+			}
+			
+			
+Note: for prototype scoped beans , spring does not call the destroy method. Spring doest not manage the complete lifecycle of prototype beans
+
+	Prototype beans are by default lazy-initialization
+	
+
+
+
+====> Configuring Beans with Java Code
+		
+		--> Create Bean configuration class  need to add @Configuration
+		--> Define @Bean method to configure the bean
+		--> inject bean to controller
+		
+		Instead of component why we create manual beans with @Beans
+			becuase
+				making an existing third-party class availaible to spring-framework
+				We may not have access to the source code of third-party class but we want to make bean of it
+        
+		
+		eg.
+		
+		@Configuration
+		public class SportConfig{
+		
+			@Bean
+			public Coach swimCoach(){  --> bean id will be same of method name , can be used by Qualifier annotation
+				return new SwimCoach();  --> here inside of  SwimCoach() class , no annotation added , not required
+			}
+		
+		}
+		
+		
+		---
+		
+		@RestController
+				publi class DemoRest{
+				
+					private Coach myCoach;
+					
+					@Autowired --> it tells spring to inject a Depedency , if only one Contructor then Autowired is optional and here we can give any method name
+					public setCoach(Qualifier("swimCoach") Coach theCoach){
+						myCoach = theCoach;
+					}
+					
+					@GeMapping("dailyworkout")
+					public String getDailyWorkout(){
+						return myCoach.getDailyWorkout();
+					}
+				}
+				
+				
+====================================================================
+Hibernate 
+
+	A framework for persisting / saving Java Objects in a database
+	Benefits:
+		Minimizes handles all low level of SQL 
+		Minimizes the amount of JDBC Code 
+		It provides object to Relational Mapping (ORM) - It maps the java object to a table
+		
+  JPA - - Jakarta Persistence API (JPA) ...previously Known as JAVA Persistence API
+		--> standard API for Object-to-Relational-Mapping (ORM)	
+		
+		Hibernate -->  JPA Spect   <-- Ecliplse Link
+		
+	
+	Eg. JPA
+	Student st = new Student("John" , "Doe", "MCA"); --> create java object
+	entityManager.persist(st) ; --> save it to DB
+	int  id =1;
+	Student stFetch = entityManager.find(Student.class, id);
+	
+	
+	--->
+	Hibernate / JPA uses JDBC for all DB Communications
+	-> In Spring boot , Hibernate is the default implementation of JPA
+	->EntityManager is the main component for creating the queries etc from JPA
+	-> Bases on config, Spring boot will automatically creates the Beans of DataSource , EntityManager
+	-> This we can inject in DAO class
+	===> Here DB Driver and Spring JPA depedencies reuired
+	As when we add Spring JPA, it automatically create the bean of DataSource , which required some input that will taken auto from prop file 
+	Note: No need to give JDBC driver name, as auto detected
+	-> spring.datasource.url=
+	-> spring.datasource.username=
+	-> spring.datasource.password = 
+	
+	
+	----> Command Line Runner , if we want to run some code in comman line ,then we have to add Command Line runner which will execute the code after all BEANS are created.
+	
+	in main class
+	@SpringBootApplication
+	public class CrunApp{
+	
+		public static void main(String[] args) {
+			SpringApplication.run(CurnAppp.class,args);
+		}
+		
+		@Bean
+		public CommandLIneRunner commandLineRunner(String[ ] args){
+			return runner -> {
+				System.out.println("Hell to WORLD");
+			}
+		}
+	
+	}

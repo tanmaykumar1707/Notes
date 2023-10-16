@@ -911,8 +911,273 @@ Hibernate
 
 
 
+---------------=======================
+
+SERVICE
+
+
+
+@Service Annotation:
+
+	Service Facade Design pattern
+	Intermediate layer for custom business logic
+	Integrate data from multiple sources (DAO/repositoried)
+	
+	REST Controller <<------>> Services <<------->> DAO  <<----->> DB
+	
+	In services, we can multiple method of DAO and do some business logic which we return to Rest controller
+	
+	
+	@Commponet <<---------------@Service 
+	
+	
+	1-> Define Service Interface
+	2-> Implement it
+	
+	public interface EmployeeService {
+		
+		List<Employee> findAll();
+	}
+
+	
+	
+	@Service
+	public class EmployeeServiceImpl implements EmployeeService{
+	
+		//inject Employee DAO
+		
+		@Override
+		List<Employee> findAll(){
+		
+			return employeeDao.findAll();
+		}
+	
+	}
+
+	
+	
+	IMPORTANT-->
+	--> Best practice is to apply transactional boundaries at the Service layer
+	--> it is the service layer's responsibility to manage transaction boundaries
+	--> Add @Transanctional on service method and remove from DAO methods
+	
+	Note: Add or Update
+	
+	public Employee save(Employee theEmployee){
+		Employee dbEmployee = entityManager.merge(theEmployee);--> if id is zero(manual setting in RestController) then save/insert else update
+		
+		return dbEmployee;
+	
+	}
+
+
+	@PutMapping("/employee")
+	public Employee updateEmployee(@RequestBody Employee theEmployee){
+	
+		Employee dbEmployee = employeeService.save(theEmployee);
+		
+		return dbEmployee;
+	
+	}
+
+
+	@DeleteMapping("/employee/{employeeId}")
+	public String deleteEmployee(@PathVariable int employeeId){
+	
+		Employee tempEmp = employeeService.findById(employeeId);
+		if(tempEmp ==null)
+		 {
+			throw new RuntimeExcpetion("Emp id not found");
+		 }
+		employeeService.deleteById(employeeId);
+		
+		return "deleted";
+	}
 
 
 
 
+==================================================
 
+
+Spring DATA JPA 
+
+	--> As we have create DAO Layer, We have directly given Entity Type , which can not be used by another entity as most of the code are same
+	
+	--> Spring Data JPA provides the interface : JpaRepository
+		which exposes methods like findAll() , findById() , save() ,deleteByid() etc
+		
+	--> In this way, we have to provide entity type and primary type , it auto create the DOA interface
+	
+	Method===>
+	
+		1) Extent JpaRepository interface
+		2) Use our Repository in our app; (No need for implementation)
+	
+	================OLD METHOD
+	
+	 -> DAO interface
+	  -----------------------
+	  public interface StudentDAO{
+	  
+		void save(Student theStudent); 
+		
+		Student findById(Integer id);
+		
+		List<Student> findAll();
+		
+		void update(Student student);
+		
+		void delete(Integer id);
+		
+	  }
+	  ------------------------------
+	  ->  DAO Implementation
+	  -----------------------------
+	  @Repository
+	  public class StutdnetDaoImpl implements StudetnDAO{
+		
+		private  EntityManager entityManager;
+		@AutoWired             --> Constructor bases injection
+		public StutdnetDaoImpl(EntityManager entityManager){
+			this.entityManager = entityManager;
+		}
+		
+		
+		@Override
+		@Transanctional
+		public void save(Student student){
+			entityManager.persist(student); --> save the Java Objec to DO
+		}
+	
+		@Override  ---> No need of @Transanctional , as we are doing only query  --> 
+		public void save(Integer id){
+			entityManager.find(Student.class, id); --> save the Java Objec to DO
+		}
+		
+		//Details below for JPQL
+		@Override  ---> No need of @Transanctional , as we are doing only query  --> 
+		public List<Student> findAll(Integer id){
+			TypedQuery<Student> theQuery = entityManager.createQuery("FROM Student",Student.class);  ---> Student is JPA Entity not Table name
+			return theQuery.getResultList();
+			
+			}
+		@Override
+		@Transanctional --> Bad Practice
+		public void update(Student student){
+			entityManager.merge(theStudent);
+		}
+	
+		@Override  
+		@Transanctional--> Bad Practice
+		public void delete(Integer id){
+			Student theStudent = entityManager.find(Student.class, id); --> save the Java Objec to DO
+			entityManager.remove(theStudent);
+		}
+	
+	  }
+	  
+	 =============== NEW Method
+	 
+	 
+	 public interface EmployeeRepository extends JpaRespository<Employee, Integer> {
+	 
+			//no need to extra code by default basic methods will be there
+	 }
+	 
+	 
+	 ================================
+	 Now we can use it directly in service layer
+	 
+	 
+	 @Service
+	 public class EmployeeServiceImpl implements EmployeeService {
+	 
+		private EmployeeRepository employeeRepository;
+		
+		@Autowired
+		public EmployeeServiceImpl(EmployeeRepository theEmpRep){----> Constructor Injection
+			employeeRepository = theEmpRep;
+		}
+		
+		@override
+		public LIst<Employee> findAll() {
+			return employeeRepository.findAll(); ----> Direct use , as JPA Repository auto fetch the data
+		}
+		
+		@override
+		public Empoyee findByid(int id) {
+			Optional<Employee> result = employeeRepository.findByid(id); ---> check for null values
+			Employee emp= null;
+			if(result.isPresent){
+				emp = result.get();
+			}else{
+			
+				throw new RuntimeExcpetion("Did not found the emp id");
+			}
+			return emp;
+		}
+		
+	 }
+	 
+	 ==========================
+	 Advanced features availaible for 
+		extendin and adding custom queries with JPQL 
+		query domain specify Language(Query DSL)
+		Defining custom methods
+		
+	========
+	
+	
+	
+=====================================================
+	
+	Spring DATA Rest  same like Spring Data Jpa.
+	
+	As we have several entity , we want to create crud Rest API, we hava to write same code again and again .We can use Spring Data Rest that provides the basic Crud Rest Api for any entity
+	
+	Spring Data Rest auto provide below  HTTP endpoints
+	
+	POST    /entity
+	GET 	/entity   -> fetch All
+	GET     /entity/{id}  -> findById
+	PUT     /entity/{id}
+	DELETE  /entity/{id}
+	
+	By Default, it will create endpoints based on tentiy ty[each
+	-> add "s" at end of entity (plural form) 
+	
+		if we need to provide custom then add below annotation in jpaRepository
+			@RepositoryRestResource(path="members")
+	
+	Add Spring Data Rest in POM XML  and auto exposes endpoints for all JpaRepository created 
+	
+	-> HATEOS
+		Spring data rest endpoints are HATEOS compliant ( Hypermedia as the engine of Application State)
+		
+		Hypermedia-driven sites provide information to access REST interfaces
+		
+	--> Advanced features like
+		pagination, sorting and searching
+		Extending and adding custom queries with JPQL , QDSL
+		
+		
+		
+	--> Giving custom enpoints
+		spring.data.rest.base-path=/magic-api
+		
+		
+====== Pagination
+		By Default , page size is 20
+		 employee?page=0
+		 employee?page=1
+		 
+		 some properties 
+		 spring.data.rest.base-path
+		 spring.data.rest.default-page-size
+		 spring.data.rest.max-page-size
+		 
+======Sorting
+	employee?sort=lastName
+	employee?sort=firstName,desc
+	employee?sort=firstName,lastName,asc

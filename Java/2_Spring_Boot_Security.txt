@@ -1,0 +1,87 @@
+Spring Security Model
+
+	Spring Security defines a framework for security
+	implemented using servlet filters in the background
+			->servlet filter are used to pre-process/post-process web requests
+			-> servlet filters can route web requests based on security logic
+			->spring provides a bulk of security functionality with servlet filters
+	two methods of securing an app : declarative and programmatic
+	
+	--> Spring security automatically secure all endpoints
+	
+	Default userid and password is : user and genereated_passwd in log
+	
+	--> Props for changing
+	spring.security.user.name=tiger
+	spring.security.user.password=tiger
+	
+	Authentication and Authorization way
+		in-memory
+		JDBC
+		LDAP
+		Custom/pluggable
+		others
+		
+
+---> Security basis on roles
+	
+	algo for password- 
+		noop -> plain text
+		bcrypt-> encrypted
+		
+		
+	Step for configuring security on role basis[Note after creating the below configuration, spring not read userid and password from properties file]
+		1) Configure the user and roles in configuration class
+		
+		
+		@Configuration
+		public class DemoSecurityConfig{
+		
+			@Bean
+			public InMemoryUserDetailsManager userDetailsManager(){
+			
+				UserDetails john = User.builder().
+									username("john")
+									.password("{noop}test123")
+									.roles("EMPLOYEE")
+									.build();
+									
+				UserDetails mary = User.builder().
+									username("mary")
+									.password("{noop}test123")
+									.roles("EMPLOYEE","MANAGER")
+									.build();
+									
+				UserDetails susan = User.builder().
+									username("susan")
+									.password("{noop}test123")
+									.roles("EMPLOYEE","MANAGER","ADMIN")
+									.build();
+									
+				return new InMemoryUserDetailsManager(john, mary, susan);
+			}
+		
+		}
+	
+		2)Authorize Requests, need to add in configuration class
+		
+		@Bean
+			public SecurityFilterChain filterChain(HttpSecurity http) throws Exception{
+				
+			  http.authorizeHttRequests( configurer -> 
+				configurer.requestMatches(HttpMethod.GET,"/api/employees").hasRole("EMPLOYEE")
+				requestMatches(HttpMethod.GET,"/api/employees/**").hasRole("EMPLOYEE")
+				
+				requestMatches(HttpMethod.GET,"/api/employees/**").hasAnyRole("EMPLOYEE","MANAGER")
+				
+				requestMatches(HttpMethod.DELETE,"/api/employees/**).hasRole("ADMIN")
+				);
+				
+			  http.httpBasic(Customizer.withDefaults());
+				
+				http.csrf(csrf->csrf.disable());
+			
+			 return http.build();
+			}
+			
+			

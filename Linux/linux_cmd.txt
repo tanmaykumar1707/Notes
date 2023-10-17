@@ -20,4 +20,8 @@ sed -i.bkp  -e 's/text_to_replace/new_text/g'  file_name
 
 	scp -r /folder/to/move  user@ip:/path/of/destination/folder/
 	
--->
+
+
+-->Go to /usr/loval 
+
+tar --strip-components 1 -xzf /apps/application/filename.tar.gz 

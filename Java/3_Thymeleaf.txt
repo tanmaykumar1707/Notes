@@ -1,0 +1,121 @@
+Thymleaf
+
+
+
+--> Spring MVC Controller
+
+	@Controller
+		public class Demo{
+			
+			@GetMapping("/")
+			public String sayHello(Model theModel){
+				theModel.addAttribute("theDate", new java.util.Date());
+				return "helloworld";
+			}
+			
+			@RequestMapping("/showForm")
+			public String showForm(){
+				return "showForm";
+			}
+			
+			@RequestMapping("/processForm")
+			public String processForm(){
+				return "helloworld";
+			}
+		
+		}
+
+---> For Thymeleaf expression, need to add Attribute in html tag
+ 
+ <!DOCTYPE HTML>
+ <html xmlns:th="http://www.thymeleaf.org">
+	<head> 
+			<link rel="stylesheet" th:href="@{/css/demo.css}" />   --> refer static folder
+			<link rel="stylesheet" href="https://www.com/demo.css}" />   --> if need to refer directly from CDN link
+	</head>
+	
+	<body> 
+		<p th:text=" 'Time on server is ' + ${theDate}">  </p>
+		
+		//Form Processing
+		
+		<form th:action="@{/processForm}" method="GET">
+			<input type="text" name="stname" />
+			<input type="submit"/>
+		</form>
+		
+	</body>
+ 
+ </html>
+ 
+ 
+ =====> helloworld.html
+ 
+  <!DOCTYPE HTML>
+ <html xmlns:th="http://www.thymeleaf.org">
+	<head> 
+			
+	</head>
+	
+	<body> 
+		<p th:text=" 'Time on server is ' + ${theDate}">  </p>
+		
+		Student Name : <span th:text ="${param.stname}" > </span> --> For refering GET Parameter from URL
+		
+	</body>
+ 
+ </html>
+
+---> Spring Boot searches the static files in below folders in sequence
+
+ 1 /META-INF/resources
+ 2 /resources
+ 3 /static
+ 4 /public 
+ 
+ 
+ ------> Reading form data version two with HttpServletReuest
+ 
+ @RequestMapping("/processForm")
+ public String letsShout(HttpServletReuest request, Model){
+	String stname = request.getParameter("stname");
+	
+	stname = stname.toUpperCase();
+	String res = "Yo" + stname;
+	
+	model.addAttribute("message" , res);
+	
+	return "helloworld";
+ 
+ }
+ 
+ -----> Version Three using Bind Variable @RequestParam Annotation
+
+ @RequestMapping("/processForm")
+ public String letsShout(@RequestParam("stname") String theStname, Model mode){
+	
+	theStname = theStname.toUpperCase();
+	String res = "Yo" + theStname;
+	
+	model.addAttribute("message" , res);
+	
+	
+	return "helloworld";
+ 
+ }
+ 
+ 
+ 
+ ----->>GetMapping && PostMapping
+ to Handle only Get Request ,
+ 
+ @RequestMapping(path='/processForm', method=RequestMethod.GET)  OR shorcut  @GetMapping('/processForm')
+ public String processForm(...){
+ 
+  ....
+ }
+ 
+ same like POST
+
+HTTP Redirect
+<meta http-equiv="refresh" content="0; URL='em/list' ">

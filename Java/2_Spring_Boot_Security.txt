@@ -85,3 +85,113 @@ Spring Security Model
 			}
 			
 			
+
+
+=============>
+ JDBC Authentication
+ 
+	--> Instead of HardCoded , we can have DB 
+	
+	Need to create two db, as per spring security format table
+	
+	1) Create SQL then table
+	2) ADD Db support to Maven POM file
+	3) Create JDBC properties file
+	4) Update Spring Security configuration to use JDBC
+	
+	two tables
+	
+	users    
+	username varchar(50)
+	password varchar(50)
+	enabled TINYINT(1)
+	
+	authorities
+	username VARCHAR(50)
+	authority VARCHAR(50)
+	
+	CREATE TABLE `users` (
+		`username` varchar(50) NOT NULL,
+		`password` varchar(50) NOT NULL,
+		`enabled` tinyint NOT NULL,
+		PRIMARY KEY (`username`)
+		
+	) ENGINE=InnoDB DEFAULT CHARSET=latin1;
+	
+	CREATE TABLE `authorities` (
+		`username` varchar(50) NOT NULL,
+		`authority` varchar(50) NOT NULL,
+		UNIQUE KEY `authorities_idx_1` (`username`,`authority`),
+		CONSTRAINT `authorities_idfx_1`
+		FOREIGN KEY (`username`)
+		REFERENCES `users` (`username`)
+	) ENGINE=InnoDB DEFAULT CHARSET=latin1;
+	
+	Note: while inserting password , for plain text it should be  '{noop}pass_123'
+	
+	
+	NOte : For Role entry, it should prefix with 'ROLE_MANAGER'
+	
+	Now, in spring connfiguratin file we have to write below code
+	
+	@configuration
+	public class DemoSecurityConfig{
+		@Bean
+		public UserDetailsManager userDetailsManager(DataSource dataSource){
+			return new JdbcUserDetailsManager(dataSource);
+		
+		}
+	
+	}
+	
+	
+	
+========================>
+
+Bcrypt Password Encryption
+
+	Generatee password from bcrypt generator
+	
+	--> Change the lenght of password 68 character
+	====
+	now  prefix {bcrypt} --> {its using a salt , its read from db... here decryption not happen}
+		No Code change
+		
+		
+=====================> 
+
+Custom table
+
+--In this,
+	we have provide query to find user by username
+	and provide to find authorities/roles by username
+
+
+Eg Custom table
+		members
+			user_id
+			pw
+			active
+		
+		roles
+			user_id
+			role
+		
+		
+	@configuration
+	public class DemoSecurityConfig{
+		@Bean
+		public UserDetailsManager userDetailsManager(DataSource dataSource){
+			JdbcUserDetailsManager userMng =  new JdbcUserDetailsManager(dataSource);
+			userMng.setUserByusernameQuery("select user_id,pw,acitive from members user_id=?";
+			userMng.setAuthoritiesByUsernameQuery("select uesr_id,role from roles where user_id=?");
+			return userMng;
+		
+		}
+	
+	}
+	
+	--> enabel security logging for testing purpose
+	
+	logging.level.org.springframework.security=DEBUG
+	

@@ -1138,10 +1138,10 @@ Spring DATA JPA
 	
 	Spring Data Rest auto provide below  HTTP endpoints
 	
-	POST    /entity
+	POST    /entity -> new create
 	GET 	/entity   -> fetch All
 	GET     /entity/{id}  -> findById
-	PUT     /entity/{id}
+	PUT     /entity/{id} -- update particulare id
 	DELETE  /entity/{id}
 	
 	By Default, it will create endpoints based on tentiy ty[each
@@ -1181,3 +1181,36 @@ Spring DATA JPA
 	employee?sort=lastName
 	employee?sort=firstName,desc
 	employee?sort=firstName,lastName,asc
+	
+	
+	
+============Example for using custom method  in Respository Rest Resource with different version
+@RepositoryRestResource
+public interface YourEntityRepository extends JpaRepository<YourEntity, Long> {
+
+	@RestResource(path = "customEndpoint", rel = "custom")
+    List<YourEntity> findByIp(@Param("paramName") String paramName);
+							here method name defines the col name of the entity
+
+    // Custom JPQL query method
+    @Query("SELECT e FROM YourEntity e WHERE e.someField = :paramValue")
+    List<YourEntity> findByCustomCriteria(@Param("paramValue") String paramValue);
+
+    // Custom native SQL query method
+    @Query(value = "SELECT * FROM your_entity_table WHERE some_column = :paramValue", nativeQuery = true)
+    List<YourEntity> findByCustomNativeQuery(@Param("paramValue") String paramValue);
+
+	@Query("SELECT e FROM YourEntity e WHERE LOWER(e.ip) LIKE %:ip%")
+	List<YourEntity> findByIpIgnoreCaseContaining(@Param("ip") String ipAddress);
+
+	@Query("SELECT e FROM YourEntity e WHERE LOWER(e.ip) LIKE %:ip%")  
+    Page<YourEntity> findByIpIgnoreCaseContaining(   --> GET /yourEntities/search/findByIpIgnoreCaseContaining?ip=example&page=0&size=10&sort=id,asc
+        @Param("ip") String ipAddress,
+        Pageable pageable
+    );
+
+	for Above Custom Query,, method name become the endpoints
+
+}
+
+	GET /yourEntities/search/findByIpIgnoreCaseContaining?ip=example
